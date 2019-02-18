@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t adel/multi-container -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run adel/multi-container npm test -- --coverage
+
+after_success:
+  - docker build -t adel/multi-client ./client
+  - docker build -t adel/multi-nginx ./nginx
+  - docker build -t adel/multi-server ./server
+  - docker build -t adel/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push adel/multi-client
+  - docker push adel/multi-nginx
+  - docker push adel/multi-server
+  - docker push adel/multi-worker
